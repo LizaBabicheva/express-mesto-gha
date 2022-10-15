@@ -8,6 +8,8 @@ const routerUsers = require('./routes/users');
 
 const routerCards = require('./routes/cards');
 
+const { errorNotFound } = require('./utils/utils');
+
 const { PORT = 3000 } = process.env;
 
 const app = express();
@@ -29,6 +31,10 @@ app.use((req, res, next) => {
 app.use(routerUsers);
 
 app.use(routerCards);
+
+app.use('*', (req, res) => {
+  res.status(errorNotFound).send({ message: 'Запрашиваемый путь не найден' });
+});
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

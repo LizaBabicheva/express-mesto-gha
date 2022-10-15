@@ -31,7 +31,13 @@ module.exports.deleteCard = (req, res) => {
         res.send({ data: card });
       }
     })
-    .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+        return;
+      }
+      res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+    });
 };
 
 module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
