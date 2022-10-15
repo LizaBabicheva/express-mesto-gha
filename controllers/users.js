@@ -1,20 +1,28 @@
 const User = require('../models/user');
 
+const { errorBadRequest, errorNotFound, errorInternal } = require('../utils/utils');
+
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
 };
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
-    // .orFail(() => new Error('Пользователь не найден'))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (!user) {
+        res.status(errorNotFound).send({ message: `Пользователь с id '${req.params.userId}' не найден` });
+      } else {
+        res.send({ data: user });
+      }
+    })
     .catch((err) => {
-      // if (err.statusCode === 404) {
-      //  return res.send({ message: 'Пользователь не найден' });
-      // }
-      res.status(500).send({ message: 'Ошибка по-умолчанию' });
+      if (err.name === 'CastError') {
+        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+        return;
+      }
+      res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
     });
 };
 
@@ -23,21 +31,42 @@ module.exports.createUser = (req, res) => {
 
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+        return;
+      }
+      res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+    });
 };
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, {
+    new: true,
+    runValidators: true,
+  })
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+        return;
+      }
+      res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+    });
 };
 
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+      } else {
+        res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+      }
+    });
 };

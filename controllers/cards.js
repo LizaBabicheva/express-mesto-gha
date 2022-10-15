@@ -1,25 +1,37 @@
 const Card = require('../models/card');
 
+const { errorBadRequest, errorNotFound, errorInternal } = require('../utils/utils');
+
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send({ cards }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
 };
 
 module.exports.createCard = (req, res) => {
-  // console.log(req.user._id);
-
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные карточки' });
+        return;
+      }
+      res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+    });
 };
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send({ data: card }))
-    .catch((err) => res.send({ message: err.message }));
+    .then((card) => {
+      if (!card) {
+        res.status(errorNotFound).send({ message: 'Карточка не найдена' });
+      } else {
+        res.send({ data: card });
+      }
+    })
+    .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
 };
 
 module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
@@ -28,7 +40,7 @@ module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   { new: true },
 )
   .then((card) => res.send({ data: card }))
-  .catch((err) => res.status(500).send({ message: err.message }));
+  .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
 
 module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
@@ -36,4 +48,4 @@ module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   { new: true },
 )
   .then((card) => res.send({ data: card }))
-  .catch((err) => res.status(500).send({ message: err.message }));
+  .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
