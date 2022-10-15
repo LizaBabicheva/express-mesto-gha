@@ -39,13 +39,37 @@ module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   { $addToSet: { likes: req.user._id } },
   { new: true },
 )
-  .then((card) => res.send({ data: card }))
-  .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
+  .then((card) => {
+    if (!card) {
+      res.status(errorNotFound).send({ message: 'Карточка не найдена' });
+    } else {
+      res.send({ data: card });
+    }
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
+      res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+      return;
+    }
+    res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+  });
 
 module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $pull: { likes: req.user._id } },
   { new: true },
 )
-  .then((card) => res.send({ data: card }))
-  .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
+  .then((card) => {
+    if (!card) {
+      res.status(errorNotFound).send({ message: 'Карточка не найдена' });
+    } else {
+      res.send({ data: card });
+    }
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
+      res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+      return;
+    }
+    res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+  });
