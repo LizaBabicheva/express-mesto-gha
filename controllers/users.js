@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const { errorBadRequest, errorNotFound, errorInternal } = require('../utils/utils');
@@ -75,5 +75,18 @@ module.exports.updateAvatar = (req, res) => {
       } else {
         res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
       }
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'secret-key', { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
     });
 };
