@@ -4,27 +4,48 @@ const User = require('../models/user');
 
 const { errorBadRequest, errorNotFound, errorInternal } = require('../utils/utils');
 
+const NotFoundError = require('../errors/not-found-err');
+const BadRequestError = require('../errors/bad-request-err');
+
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
 };
 
-module.exports.getUserById = (req, res) => {
+// module.exports.getUserById = (req, res) => {
+//   User.findById(req.params.userId)
+//     .then((user) => {
+//       if (!user) {
+//         res.status(errorNotFound).send({ message: `Пользователь с id '${req.params.userId}' не найден` });
+//       } else {
+//         res.send({ data: user });
+//       }
+//     })
+//     .catch((err) => {
+//       if (err.name === 'CastError') {
+//         res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+//         return;
+//       }
+//       res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+//     });
+// };
+
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(errorNotFound).send({ message: `Пользователь с id '${req.params.userId}' не найден` });
-      } else {
-        res.send({ data: user });
+        throw new NotFoundError(`Пользователь с id '${req.params.userId}' не найден`);
       }
+      // else{}
+      res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
-        return;
+        throw new BadRequestError('Переданы некорректные данные пользователя');
       }
-      res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+      // else {}
+      next(err);
     });
 };
 

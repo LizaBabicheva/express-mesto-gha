@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const routerUsers = require('./routes/users');
 const routerCards = require('./routes/cards');
-const { errorNotFound } = require('./utils/utils');
+const { errorNotFound, errorInternal } = require('./utils/utils');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 
@@ -26,6 +26,20 @@ app.use(routerCards);
 
 app.use('*', (req, res) => {
   res.status(errorNotFound).send({ message: 'Запрашиваемый путь не найден' });
+});
+
+// app.use((err, req, res, next) => {
+//   res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
+// });
+
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+
+  res.status(statusCode).send({
+    message: statusCode === 500
+      ? 'На сервере произошла ошибка'
+      : message,
+  });
 });
 
 app.listen(PORT, () => {
