@@ -43,6 +43,10 @@ module.exports.createUser = (req, res) => {
         res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
         return;
       }
+      if (err.code === 1100) {
+        res.send({ message: 'Данный email уже зарегестрирован' });
+        return;
+      }
       res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
     });
 };
@@ -89,5 +93,15 @@ module.exports.login = (req, res) => {
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });
+    });
+};
+
+module.exports.getUserInfo = (req, res) => {
+  User.find(req.user._id)
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      res.status(errorInternal).send({ message: err.message });
     });
 };
