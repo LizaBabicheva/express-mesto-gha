@@ -16,8 +16,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
-app.post('/signin', login);
 app.post('/signup', createUser);
+app.post('/signin', login);
 
 app.use(auth);
 
