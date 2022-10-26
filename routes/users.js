@@ -9,19 +9,18 @@ const {
 
 routerUsers.post('/signup', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(2).max(30)
-      .email({ minDomainSegments: 2, tlds: { allow: false } }),
-    password: Joi.string().required().pattern(/^[a-zA-Z0-9]{3,30}$/),
+    email: Joi.string().required().email({ minDomainSegments: 2, tlds: { allow: false } }).pattern(/^[a-zA-Z0-9_.]+[@]{1}[a-z0-9]+\.[a-z]+$/),
+    password: Joi.string().required().pattern(/^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{6,})\S$/),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(new RegExp(['^[a-zA-Z0-9]{3,30}$'])), // паттерн
+    avatar: Joi.string().pattern(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/),
   }),
 }), createUser);
 
 routerUsers.post('/signin', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(2).max(30),
-    password: Joi.string().required(), // email,паттерн,
+    email: Joi.string().required().email({ minDomainSegments: 2, tlds: { allow: false } }).pattern(/^[a-zA-Z0-9_.]+[@]{1}[a-z0-9]+\.[a-z]+$/),
+    password: Joi.string().required().pattern(/^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{6,})\S$/),
   }),
 }), login);
 
@@ -33,16 +32,10 @@ routerUsers.get('/users/me', auth, getUserInfo);
 
 routerUsers.patch('/users/me', auth, updateUser);
 
-routerUsers.patch('/users/me/avatar', auth, updateAvatar);
-
-// routerUsers.get('/users', auth, getUsers);
-
-// routerUsers.get('/users/:userId', auth, getUserById);
-
-// routerUsers.get('/users/me', auth, getUserInfo);
-
-// routerUsers.patch('/users/me', auth, updateUser);
-
-// routerUsers.patch('/users/me/avatar', auth, updateAvatar);
+routerUsers.patch('/users/me/avatar', celebrate({
+  body: Joi.object().keys({
+    link: Joi.string().required().pattern(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/),
+  }),
+}), auth, updateAvatar);
 
 module.exports = routerUsers;
