@@ -30,7 +30,12 @@ routerUsers.get('/users/:userId', auth, getUserById);
 
 routerUsers.get('/users/me', auth, getUserInfo);
 
-routerUsers.patch('/users/me', auth, updateUser);
+routerUsers.patch('/users/me', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+  }),
+}), auth, updateUser);
 
 routerUsers.patch('/users/me/avatar', celebrate({
   body: Joi.object().keys({
