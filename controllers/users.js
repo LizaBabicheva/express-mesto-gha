@@ -17,14 +17,16 @@ module.exports.getUsers = (req, res) => {
 //   User.findById(req.params.userId)
 //     .then((user) => {
 //       if (!user) {
-//         res.status(errorNotFound).send({ message: `Пользователь с id '${req.params.userId}' не найден` });
+//         res.status(errorNotFound).send({
+// message: `Пользователь с id '${req.params.userId}' не найден` });
 //       } else {
 //         res.send({ data: user });
 //       }
 //     })
 //     .catch((err) => {
 //       if (err.name === 'CastError') {
-//         res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
+//         res.status(errorBadRequest).send(
+// { message: 'Переданы некорректные данные пользователя' });
 //         return;
 //       }
 //       res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
@@ -42,7 +44,7 @@ module.exports.getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Переданы некорректные данные пользователя');
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
       }
       // else {}
       next(err);

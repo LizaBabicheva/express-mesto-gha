@@ -1,21 +1,11 @@
 const routerUsers = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
 
-// const auth = require('./middlewares/auth');
+const auth = require('../middlewares/auth');
 
 const {
   getUsers, getUserById, updateUser, updateAvatar, getUserInfo, createUser, login,
 } = require('../controllers/users');
-
-routerUsers.get('/users', getUsers);
-
-routerUsers.get('/users/:userId', getUserById);
-
-routerUsers.get('/users/me', getUserInfo);
-
-routerUsers.patch('/users/me', updateUser);
-
-routerUsers.patch('/users/me/avatar', updateAvatar);
 
 routerUsers.post('/signup', celebrate({
   body: Joi.object().keys({
@@ -27,12 +17,23 @@ routerUsers.post('/signup', celebrate({
     avatar: Joi.string().pattern(new RegExp(['^[a-zA-Z0-9]{3,30}$'])), // паттерн
   }),
 }), createUser);
+
 routerUsers.post('/signin', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().min(2).max(30),
     password: Joi.string().required(), // email,паттерн,
   }),
 }), login);
+
+routerUsers.get('/users', auth, getUsers);
+
+routerUsers.get('/users/:userId', auth, getUserById);
+
+routerUsers.get('/users/me', auth, getUserInfo);
+
+routerUsers.patch('/users/me', auth, updateUser);
+
+routerUsers.patch('/users/me/avatar', auth, updateAvatar);
 
 // routerUsers.get('/users', auth, getUsers);
 
