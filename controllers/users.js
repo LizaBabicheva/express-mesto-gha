@@ -2,15 +2,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const { errorBadRequest, errorInternal } = require('../utils/utils');
-
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' }));
+    .catch(next);
 };
 
 // module.exports.getUserById = (req, res) => {
@@ -45,6 +43,7 @@ module.exports.getUserById = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные пользователя'));
+        return;
       }
       // else {}
       next(err);
@@ -60,10 +59,16 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      const userWithoutPassword = user.toObject();
+      delete userWithoutPassword.password;
+      res.send(userWithoutPassword);
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректные данные пользователя'));
+        throw new BadRequestError('Переданы некорректные данные пользователя');
+        // res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
+        // return;
       }
       if (err.code === 1100) {
         res.send({ message: 'Данный email уже зарегестрирован' });
@@ -88,6 +93,7 @@ module.exports.updateUser = (req, res, next) => {
         // 'Переданы некорректные данные пользователя' });
         // return;
         next(new BadRequestError('Переданы некорректные данные пользователя'));
+        return;
       }
       // res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
       next(err);
@@ -101,11 +107,10 @@ module.exports.updateAvatar = (req, res, next) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(errorBadRequest).send({ message: 'Переданы некорректные данные пользователя' });
-      } else {
-        // res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
-        next(err);
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
+        return;
       }
+      next(err);
     });
 };
 
@@ -118,23 +123,24 @@ module.exports.login = (req, res, next) => {
       // res.send({ token });
       res.status(200).cookie('authorization', token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).send({ message: 'Успешная авторизация' });
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
-  next(err);
+    // .catch((err) => {
+    //   res.status(401).send({ message: err.message });
+    // });
+    .catch(next);
 };
 
 module.exports.getUserInfo = (req, res, next) => {
-  User.find(req.user._id)
+  User.findOne(req.user._id)
     .then((user) => {
       res.send({ data: user });
     })
-    .catch((err) => {
-      //   res.status(errorInternal).send({ message: err.message });
-      // });
-      if (err.name === 'CastError') {
-        next(new BadRequestError('Переданы некорректные данные пользователя'));
-      }
-      next(err);
-    });
+    // .catch((err) => {
+    //   //   res.status(errorInternal).send({ message: err.message });
+    //   // });
+    //   if (err.name === 'CastError') {
+    //     next(new BadRequestError('Переданы некорректные данные пользователя'));
+    //   }
+    //   next(err);
+    .catch(next);
+  // });
 };
