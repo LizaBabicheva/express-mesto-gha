@@ -11,25 +11,21 @@ module.exports.getUsers = (req, res, next) => {
     .catch(next);
 };
 
-// module.exports.getUserById = (req, res) => {
-//   User.findById(req.params.userId)
-//     .then((user) => {
-//       if (!user) {
-//         res.status(errorNotFound).send({
-// message: `Пользователь с id '${req.params.userId}' не найден` });
-//       } else {
-//         res.send({ data: user });
-//       }
-//     })
-//     .catch((err) => {
-//       if (err.name === 'CastError') {
-//         res.status(errorBadRequest).send(
-// { message: 'Переданы некорректные данные пользователя' });
-//         return;
-//       }
-//       res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
-//     });
-// };
+module.exports.getUserInfo = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      res.send({ data: user });
+    })
+    // .catch((err) => {
+    //   //   res.status(errorInternal).send({ message: err.message });
+    //   // });
+    //   if (err.name === 'CastError') {
+    //     next(new BadRequestError('Переданы некорректные данные пользователя'));
+    //   }
+    //   next(err);
+    .catch(next);
+  // });
+};
 
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
@@ -127,20 +123,4 @@ module.exports.login = (req, res, next) => {
     //   res.status(401).send({ message: err.message });
     // });
     .catch(next);
-};
-
-module.exports.getUserInfo = (req, res, next) => {
-  User.findOne(req.user._id)
-    .then((user) => {
-      res.send({ data: user });
-    })
-    // .catch((err) => {
-    //   //   res.status(errorInternal).send({ message: err.message });
-    //   // });
-    //   if (err.name === 'CastError') {
-    //     next(new BadRequestError('Переданы некорректные данные пользователя'));
-    //   }
-    //   next(err);
-    .catch(next);
-  // });
 };
