@@ -10,7 +10,7 @@ const {
 routerUsers.post('/signup', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email({ minDomainSegments: 2, tlds: { allow: false } }).pattern(/^[a-zA-Z0-9_.]+[@]{1}[a-z0-9]+\.[a-z]+$/),
-    password: Joi.string().required().pattern(/^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{6,})\S$/),
+    password: Joi.string().required().min(4),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().pattern(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/),
@@ -20,7 +20,7 @@ routerUsers.post('/signup', celebrate({
 routerUsers.post('/signin', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email({ minDomainSegments: 2, tlds: { allow: false } }).pattern(/^[a-zA-Z0-9_.]+[@]{1}[a-z0-9]+\.[a-z]+$/),
-    password: Joi.string().required().pattern(/^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{6,})\S$/),
+    password: Joi.string().required().min(4),
   }),
 }), login);
 
