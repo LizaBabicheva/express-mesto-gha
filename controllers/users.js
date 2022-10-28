@@ -26,10 +26,8 @@ module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        next(new NotFoundError(`Пользователь с id '${req.params.userId}' не найден`));
-        return;
+        throw new NotFoundError(`Пользователь с id '${req.params.userId}' не найден`);
       }
-      // else{}
       res.send({ data: user });
     })
     .catch((err) => {
@@ -37,7 +35,6 @@ module.exports.getUserById = (req, res, next) => {
         next(new BadRequestError('Переданы некорректные данные пользователя'));
         return;
       }
-      // else {}
       next(err);
     });
 };
