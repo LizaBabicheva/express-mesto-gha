@@ -26,9 +26,9 @@ routerUsers.post('/signin', celebrate({
 
 routerUsers.get('/users', auth, getUsers);
 
-routerUsers.get('/users/:userId', auth, getUserById);
-
 routerUsers.get('/users/me', auth, getUserInfo);
+
+routerUsers.get('/users/:userId', auth, getUserById);
 
 routerUsers.patch('/users/me', celebrate({
   body: Joi.object().keys({

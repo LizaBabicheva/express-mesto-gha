@@ -4,6 +4,8 @@ const User = require('../models/user');
 
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
+const MONGO_DB_CODE = require('../utils/utils');
+// const SECRET_JWT = require('../utils/utils');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -12,26 +14,19 @@ module.exports.getUsers = (req, res, next) => {
 };
 
 module.exports.getUserInfo = (req, res, next) => {
-  User.findById(req.user._id)
+  User.find(req.user)
     .then((user) => {
       res.send({ data: user });
     })
-    // .catch((err) => {
-    //   //   res.status(errorInternal).send({ message: err.message });
-    //   // });
-    //   if (err.name === 'CastError') {
-    //     next(new BadRequestError('Переданы некорректные данные пользователя'));
-    //   }
-    //   next(err);
     .catch(next);
-  // });
 };
 
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError(`Пользователь с id '${req.params.userId}' не найден`);
+        next(new NotFoundError(`Пользователь с id '${req.params.userId}' не найден`));
+        return;
       }
       // else{}
       res.send({ data: user });
@@ -50,7 +45,12 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-
+  //
+  // if (!email || !password) {
+  //   next(new BadRequestError('Email или пароль не введен'));
+  //   return;
+  // }
+  //
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
@@ -61,18 +61,18 @@ module.exports.createUser = (req, res, next) => {
       res.send(userWithoutPassword);
     })
     .catch((err) => {
+      // console.log(err);
+      if (err.code === MONGO_DB_CODE) {
+        res.status(409).send({ message: 'Юзер уже создан' });
+      }
       if (err.name === 'ValidationError') {
-        throw new BadRequestError('Переданы некорректные данные пользователя');
+        next(new BadRequestError('Переданы некорректные данные пользователя'));
         // res.status(400).send({ message: 'Переданы некорректные данные пользователя' });
         // return;
       }
-      if (err.code === 1100) {
-        res.send({ message: 'Данный email уже зарегестрирован' });
-        return;
-      }
-      // res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
       next(err);
     });
+  // res.status(errorInternal).send({ message: 'Ошибка по-умолчанию' });
 };
 
 module.exports.updateUser = (req, res, next) => {
@@ -112,15 +112,23 @@ module.exports.updateAvatar = (req, res, next) => {
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
-
+  //
+  if (!email || !password) {
+    return res.status(400).send({ message: 'Не заполнен пароль/мейл' });
+  }
+  //
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'secret-key', { expiresIn: '7d' });
       // res.send({ token });
-      res.status(200).cookie('authorization', token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).send({ message: 'Успешная авторизация' });
+      res.status(200)
+        .cookie('authorization', token, { maxAge: 3600000 * 24 * 7, httpOnly: true })
+        .send({ message: 'Успешная авторизация' });
     })
     // .catch((err) => {
     //   res.status(401).send({ message: err.message });
     // });
     .catch(next);
 };
+
+// return next(new MyError(''));
