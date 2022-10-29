@@ -13,14 +13,6 @@ module.exports.getUsers = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.getUserInfo = (req, res, next) => {
-  User.find(req.user)
-    .then((user) => {
-      res.send({ data: user });
-    })
-    .catch(next);
-};
-
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
@@ -105,6 +97,14 @@ module.exports.login = (req, res, next) => {
       res.status(200)
         .cookie('authorization', token, { maxAge: 3600000 * 24 * 7, httpOnly: true })
         .send({ message: 'Успешная авторизация' });
+    })
+    .catch(next);
+};
+
+module.exports.getUserInfo = (req, res, next) => {
+  User.find(req.user)
+    .then((user) => {
+      res.send({ data: user });
     })
     .catch(next);
 };
