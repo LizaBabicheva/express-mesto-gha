@@ -4,7 +4,7 @@ const UnauthorizedError = require('../errors/unauthorized-err');
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
-  const { authorization } = req.headers;
+  const { authorization } = req.cookies;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
     throw new UnauthorizedError('Необходима авторизация');
