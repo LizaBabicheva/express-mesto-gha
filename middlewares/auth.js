@@ -7,6 +7,7 @@ module.exports = (req, res, next) => {
   const { authorization } = req.cookies;
 
   if (!authorization) {
+    // (!authorization || !authorization.startsWith('Bearer ')
     throw new UnauthorizedError('Необходима авторизация');
   }
   const token = authorization.replace('Bearer ', '');
